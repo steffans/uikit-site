@@ -1,5 +1,5 @@
 group "default" {
-    targets = ["site"]
+    targets = ["site", "site-amd"]
 }
 
 target "site" {
