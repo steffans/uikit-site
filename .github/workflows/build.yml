@@ -50,7 +50,7 @@ jobs:
         include: ${{ fromJson(needs.prepare.outputs.platforms) }}
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v5
 
       - name: Prepare
@@ -79,13 +79,12 @@ jobs:
         uses: docker/bake-action@v6
         with:
           push: true
-          source: .
-          targets: ${{ matrix.target }}
           set: |
             *.platform=${{ matrix.platforms }}
           files: |
             ./docker-bake.hcl
             cwd://${{ steps.meta.outputs.bake-file }}
+          targets: ${{ matrix.target }}
 
       - name: Export digest
         run: |
@@ -96,10 +95,10 @@ jobs:
       - name: Upload digest
         uses: actions/upload-artifact@v4
         with:
-          name: digests-${{ matrix.target }}-${{ env.PLATFORM_PAIR }}
+          name: digests~${{ matrix.target }}~${{ env.PLATFORM_PAIR }}
           path: ${{ runner.temp }}/digests/*
-          if-no-files-found: error
           retention-days: 1
+          if-no-files-found: error
 
   merge:
     runs-on: ubuntu-latest
@@ -117,7 +116,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: ${{ runner.temp }}/digests
-          pattern: digests-${{ matrix.target }}-*
+          pattern: digests~${{ matrix.target }}~*
           merge-multiple: true
 
       - name: Login to Docker Registry
@@ -140,10 +139,10 @@ jobs:
             type=semver,pattern={{version}}
 
       - name: Create manifest list and push
-        working-directory: ${{ runner.temp }}/digests
         run: |
           docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
             $(printf '${{ env.REGISTRY_NAMESPACE }}/${{ matrix.target }}@sha256:%s ' *)
+        working-directory: ${{ runner.temp }}/digests
 
       - name: Inspect image
         run: |
