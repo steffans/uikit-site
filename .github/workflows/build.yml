@@ -79,13 +79,13 @@ jobs:
         uses: docker/bake-action@v6
         with:
           push: true
-          sbom: false
+          targets: ${{ matrix.target }}
+          provenance: false # Disable to avoid unknown/unknown
           set: |
             *.platform=${{ matrix.platforms }}
           files: |
             ./docker-bake.hcl
             cwd://${{ steps.meta.outputs.bake-file }}
-          targets: ${{ matrix.target }}
 
       - name: Export digest
         run: |
