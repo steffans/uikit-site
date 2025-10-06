@@ -79,6 +79,7 @@ jobs:
         uses: docker/bake-action@v6
         with:
           push: true
+          sbom: false
           set: |
             *.platform=${{ matrix.platforms }}
           files: |
